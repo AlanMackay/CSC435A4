@@ -410,6 +410,13 @@ public class LLVM {
             return src;
     }
 
+    public LLVMValue writePhi(String opcode, String lhs, String rhs)
+    {
+        String rv = nextTemporary();
+        printf("  %s = %s %s, %s\n", rv, opcode, lhs, rhs);
+        return new LLVMValue("i1", rv, false);
+    }
+
 	static String hexchar = "0123456789ABCDEF";
 
 	static private int escapedChar( char c ) {

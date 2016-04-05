@@ -264,7 +264,7 @@ public class CGenVisitor extends GooBaseVisitor<LLVMValue> {
 	    Type[] results = sig.getResults();
 	    String retType = "void";
 	    if (results != null && results.length > 0)
-	        retType = ll.createTypeDescriptor(results[0]);
+	        retType = ll.getTypeDescriptor(results[0]);
 	    ll.resetNumbering();
 	    ll.println("; Function Attrs: nounwind uwtable");
 	    ll.printf("define %s @%s(", retType, funcName );
@@ -272,7 +272,7 @@ public class CGenVisitor extends GooBaseVisitor<LLVMValue> {
 	    boolean notFirst = false;
 	    StringBuilder sb = new StringBuilder();
 	    for( Symbol parm : function.getParameters() ) {
-	    	String ptyp = ll.createTypeDescriptor(parm.getType());
+	    	String ptyp = ll.getTypeDescriptor(parm.getType());
 	    	int llalign = ll.getAlignment(ptyp);
 	    	String llname = "%"+parm.getName();
 	    	if (notFirst)
@@ -517,9 +517,29 @@ public class CGenVisitor extends GooBaseVisitor<LLVMValue> {
 	
 	@Override
 	public LLVMValue visitBoolExp(GooParser.BoolExpContext ctx) {
-		return visitChildren(ctx);
+		
+		LLVMValue lhsExp, rhsExp, result;
+		String rhs = ll.createBBLabel("rhs");
+		String pass = ll.createBBLabel("pass");
+		String fail = ll.createBBLabel("fail");
+		String end = ll.createBBLabel("end");
+		
+		lhsExp = visit(ctx.expression(0));
+		if (ctx.children.get(1).getText().equals("&&"))
+			ll.writeCondBranch(lhsExp, rhs, fail);
+		else
+			ll.writeCondBranch(lhsExp, pass, rhs);
+		ll.writeLabel(rhs);
+		rhsExp = visit(ctx.expression(1));
+		ll.writeCondBranch(rhsExp, pass, fail);
+		ll.writeLabel(pass);
+		ll.writeBranch(end);
+		ll.writeLabel(fail);
+		ll.writeBranch(end);
+		ll.writeLabel(end);
+		result = ll.writePhi("phi i1", "[ true, %" + pass + " ]", "[ false, %" + fail + " ]");
+		return result;
 	}
-
 
 	// unaryExpr
     //     :   primaryExpr
@@ -661,21 +681,30 @@ public class CGenVisitor extends GooBaseVisitor<LLVMValue> {
 	// forStmt:   FOR condition block | FOR forClause block ;
 	@Override
 	public LLVMValue visitForStmt(GooParser.ForStmtContext ctx) {
+				
+	 	String forTest = ll.createBBLabel("forTest");
+		String forTrue = ll.createBBLabel("forTrue");
+		String forFalse = ll.createBBLabel("forFalse");
+		LLVMValue cond;
+
+		if (ctx.forClause() != null)
+			visit(((ctx.forClause()).initStmt()).simpleStmt());
+		ll.writeBranch(forTest);
+		ll.writeLabel(forTest);
 		if (ctx.condition() != null){
-			String forTest = ll.createBBLabel("forTest");
-			String forTrue = ll.createBBLabel("forTrue");
-			String forFalse = ll.createBBLabel("forFalse");
-			ll.writeBranch(forTest);
-			ll.writeLabel(forTest);
-			LLVMValue cond = visit(ctx.condition());
+			cond = visit(ctx.condition());
 			ll.writeCondBranch(cond, forTrue, forFalse);
-			ll.writeLabel(forTrue);
-			visit(ctx.block());
-			ll.writeBranch(forTest);
-			ll.writeLabel(forFalse);
-		}
-		else
-			visit(ctx.forClause());
+		} else if (ctx.forClause() != null && (ctx.forClause()).condition() != null){
+			cond = visit((ctx.forClause()).condition());
+			ll.writeCondBranch(cond, forTrue, forFalse);
+		} else
+			ll.writeBranch(forTrue); // For loop has no condition
+		ll.writeLabel(forTrue);
+		visit(ctx.block());
+		if (ctx.forClause() != null)
+			visit(((ctx.forClause()).postStmt()).simpleStmt());
+		ll.writeBranch(forTest);
+		ll.writeLabel(forFalse);
 
 		return null;
 	}
