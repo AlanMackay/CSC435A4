@@ -26,7 +26,7 @@ public class LLVMExtras {
 			return result;
 		Type typ = sy.getType();
 		String name = "@" + sy.getName() + "." + ll.nextGlobalNum++;
-		String gdesc = ll.createTypeDescriptor(typ);
+		String gdesc = ll.getTypeDescriptor(typ);
 		String which = isConst? "constant" : "common global";
 		ll.prePrintf("%s = %s %s %s, align %d\n",
 			name, which, gdesc, initValues, ll.getAlignment(typ));
@@ -42,7 +42,7 @@ public class LLVMExtras {
 			return result;
 		Type typ = sy.getType();
 		String name = "@" + sy.getName() + "." + ll.nextGlobalNum++;
-		String gdesc = ll.createTypeDescriptor(typ);
+		String gdesc = ll.getTypeDescriptor(typ);
 		ll.prePrintf("%s = common global %s zeroinitializer, align %d\n",
 			name, gdesc, ll.getAlignment(typ));
 		result = new LLVMValue(gdesc, name, true);
@@ -63,7 +63,7 @@ public class LLVMExtras {
 			return result;
 		Type typ = sy.getType();
 		String name = ll.nextTemporary();
-		String gdesc = ll.createTypeDescriptor(typ);
+		String gdesc = ll.getTypeDescriptor(typ);
 		ll.printf("  %s = alloca %s, align %d ; %s\n",
 					name, gdesc, ll.ptrAlign, sy.getName());
 		return new LLVMValue(gdesc, name, true);
@@ -89,8 +89,8 @@ public class LLVMExtras {
 	static public LLVMValue elementReference( LLVM ll,
 			Type.Array arrType, LLVMValue arrPtr, LLVMValue index ) {
 		Type elemType = arrType.getElementType();
-		String etyp = ll.createTypeDescriptor(elemType);
-		String atyp = ll.createTypeDescriptor(arrType);
+		String etyp = ll.getTypeDescriptor(elemType);
+		String atyp = ll.getTypeDescriptor(arrType);
 		index = ll.forceIntValue(index);
 		String rv1 = ll.nextTemporary();
 		ll.printf("  %s = getelementptr inbounds %s, %s* %s, i32 0, %s\n",
@@ -113,12 +113,12 @@ public class LLVMExtras {
 			fnum++;
 		}
 		assert(fldType != null);
-		String ftyp = ll.createTypeDescriptor(fldType);
-		String styp = ll.createTypeDescriptor(strType);
+		String ftyp = ll.getTypeDescriptor(fldType);
+		String styp = ll.getTypeDescriptor(strType);
 		String rv1 = ll.nextTemporary();
-		ll.printf("  %s = getelementptr inbounds (%s, %s* %s, i32 0, i32 %d\n",
+		ll.printf("  %s = getelementptr inbounds %s, %s* %s, i32 0, i32 %d\n",
 			rv1, styp, styp, strPtr.getValue(), fnum);
-		return new LLVMValue(ftyp + "*", rv1, true);
+		return new LLVMValue(ftyp, rv1, true);
 	}
 
 	// returns 1 for i1, 8 for i8, 32 for i32, 64 for i64 and 0 for everything else

@@ -145,13 +145,15 @@ public class LLVM {
             sb.append("%struct.");
             sb.append(nextStructNumber++);
             String name = sb.toString();
-            sb.append(" = type { ");
+            sb.append(" = type {");
+            String prefix = " ";
             for( Symbol sy : ((Type.Struct)typ).getFields().values() ) {
                 String st = getTypeDescriptor(sy.getType());
+                sb.append(prefix);
+                prefix = ", ";
                 sb.append(st);
-                sb.append(' ');
             }
-            sb.append("}");
+            sb.append(" }");
             prePrintln(sb.toString());
             return name;
         }

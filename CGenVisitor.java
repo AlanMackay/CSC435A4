@@ -441,9 +441,10 @@ public class CGenVisitor extends GooBaseVisitor<LLVMValue> {
 			}
 			// it's a field selection in a struct
 			//static public LLVMValue elementReference( LLVM ll, Type.Struct strType, LLVMValue strPtr, String fieldName )
-			String fieldName = ctx.selector.text();
+			Type.Struct strType = (Type.Struct)pkg.getType();
 			LLVMValue strPtr = visit(ctx.primaryExpr());
-			return LLVMExtras.elementReference(ll, (Type.Struct)pkg.getType(), strPtr, fieldName);
+			String fieldName = ctx.selector().getText().substring(1);
+			return LLVMExtras.elementReference(ll, strType, strPtr, fieldName);
 		}
 		if (ctx.index() != null) {
 		    // create reference to an array element
