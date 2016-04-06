@@ -49,16 +49,12 @@ public class CGenFunctionCall {
 		// it has to be a built-in Go function or a function defined in the program
 		if (fn.getScope().getEnclosingScope() == null) {
 			// it's a predefined function
-			System.out.println("Here");
 			if(funcName.equals("new")){
 				if(args.size() != 1){
 					ReportError.error(ctx, "Function " + funcName + " requires exactly one argument");
 					return new LLVMValue("i32", "0", false);
 				}
-
-				LLVMValue value = args.get(0);
-				rslt = ll.nextTemporary();
-				ll.printf("  %s = call noalias i8* @calloc(i64 1, %s)\n", rslt, value.getType());
+				ll.printf("  %s = call noalias i8* @calloc(i64 1, i64 1)\n", rslt);
 				return new LLVMValue("i32", rslt, false);
 			}
 			ReportError.error(ctx, "unimplemented builtin go function: "+funcName);

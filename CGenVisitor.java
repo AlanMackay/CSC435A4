@@ -400,11 +400,16 @@ public class CGenVisitor extends GooBaseVisitor<LLVMValue> {
 			ArrayList<LLVMValue> argVals = valsList.expressionList;
 			int k = 0;
 			for( LLVMValue exp : argVals ) {
-				exp = ll.dereference(exp);
-				if (exp.getValue().charAt(0)=='c')
-					exp = ll.forceStringReference(exp);
-				argVals.set(k++, exp);
-				
+				if(exp == null) {
+					Type t = lookupType(ctx.arguments().expressionList().expression(k));
+					String type = ll.getTypeDescriptor(t);
+					exp = new LLVMValue(type, "", false);
+				}else{
+					exp = ll.dereference(exp);
+					if (exp.getValue().charAt(0)=='c')
+						exp = ll.forceStringReference(exp);
+				}
+				argVals.set(k++, exp);				
 			}
 			String funcName = ctx.primaryExpr().getText();
 			Symbol funcSym = currentScope.resolve(funcName);

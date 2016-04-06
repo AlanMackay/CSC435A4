@@ -19,6 +19,7 @@ public class LLVMPredefined {
         // and <A> is replaced with the alignment needed for pointers (4 or 8).
 //    	"declare i<W> @strlen(i8*) #1",
 //    	"declare i8* @malloc(i<W>) #1",
+        "declare noalias i8* @calloc(i<W>, i<W>)",
 //    	"declare i8* @strcpy(i8*, i8*) #1",
 //    	"declare i8* @strcat(i8*, i8*) #1",
 //      "declare i8* @strncpy(i8*, i8*, i<W>) #1",
